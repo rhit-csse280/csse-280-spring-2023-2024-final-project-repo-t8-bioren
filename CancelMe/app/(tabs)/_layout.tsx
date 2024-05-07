@@ -54,6 +54,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
+       <Tabs.Screen
+        name="myRequests"
+        options={{
+          title: 'My Requests',
+          tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
