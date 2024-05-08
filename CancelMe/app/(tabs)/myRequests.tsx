@@ -9,7 +9,7 @@ import { Text, View } from "@/components/Themed";
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Calendar, CalendarList, Agenda } from "react-native-calendars";
-import { collection, getDocs, getFirestore } from "firebase/firestore";
+import { collection, doc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { firebaseConfig } from "@/firebaseConfig";
 
@@ -26,35 +26,37 @@ export default function myRequestsScreen() {
     complete: false,
   });
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
 
   // Firebase stuff
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  const fetchData = async () => {
+    const reqRef = collection(db, "Requests");
+    const docSnap = await getDocs(reqRef);
+    // This is some funky stackoverflow code but it maps the document snapshot to an array of JSON objects with the right types
+    const data = docSnap.docs.map(
+      (doc) => ({
+        id: doc.id,
+        to: doc.data().to,
+        from: doc.data().from,
+        date: doc.data().date,
+        complete: doc.data().complete,
+      }) as {
+        id: string;
+        to: string;
+        from: string;
+        date: string;
+        complete: boolean;
+      }
+    );
+    setRequests(data);
+    console.log('data :>> ', data);
+  };
+
   // Get requests
   useEffect(() => {
-    const fetchData = async () => {
-      const reqRef = collection(db, "Requests");
-      const docSnap = await getDocs(reqRef);
-      // This is some funky stackoverflow code but it maps the document snapshot to an array of JSON objects with the right types
-      const data = docSnap.docs.map(
-        (doc) => ({
-          id: doc.id,
-          to: doc.data().to,
-          from: doc.data().from,
-          date: doc.data().date,
-          complete: doc.data().complete,
-        }) as {
-          id: string;
-          to: string;
-          from: string;
-          date: string;
-          complete: boolean;
-        }
-      );
-      setRequests(data);
-      console.log('data :>> ', data);
-    };
     fetchData();
   }, []);
 
@@ -97,8 +99,31 @@ export default function myRequestsScreen() {
       complete: boolean;
     };
     setSelectedRequest(req);
+    setSelectedDate(req.date);
     setModalVisible(true);
     console.log('id :>> ', id);
+  }
+
+  // Save the request
+  function saveRequest() {
+    // Update Firestore document
+    const update = async () => {
+      const docRef = doc(db, "Requests", selectedRequest.id);
+      await updateDoc(docRef, {
+        date: selectedDate,
+      });
+    }
+    update();
+    fetchData();  // There's probably a better way to do this.
+    setModalVisible(!modalVisible);
+    setSelectedRequest({
+      id: "",
+      to: "",
+      from: "",
+      date: "",
+      complete: false
+    });
+    setSelectedDate("");
   }
 
   return (
@@ -117,10 +142,13 @@ export default function myRequestsScreen() {
           <Calendar
             initialDate={selectedRequest.date}
             markedDates={{
-              [selectedRequest.date]: {
+              [selectedDate]: {
                 selected: true,
                 marked: true,
               },
+            }}
+            onDayPress={(day) => {
+              setSelectedDate(day.dateString);
             }}
           ></Calendar>
           <Button
@@ -129,11 +157,18 @@ export default function myRequestsScreen() {
               setModalVisible(!modalVisible);
             }}
           />
+          <Button
+            title="Save"
+            onPress={() => {
+              saveRequest();
+            }}
+          />
         </View>
       </Modal>
       <FlatList
         style={styles.list}
         data={requests}
+        extraData={requests}
         renderItem={({ item }) => (
           <TouchableHighlight onPress={() => clickedRequest(item.id)}>
             <View style={styles.listItem}>
