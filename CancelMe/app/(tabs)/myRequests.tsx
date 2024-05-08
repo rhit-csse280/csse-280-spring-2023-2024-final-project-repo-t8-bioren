@@ -5,60 +5,69 @@ import {
   StyleSheet,
   TouchableHighlight,
 } from "react-native";
-
-import EditScreenInfo from "@/components/EditScreenInfo";
 import { Text, View } from "@/components/Themed";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Calendar, CalendarList, Agenda } from "react-native-calendars";
-
-import {
-  collection,
-  getDocs,
-  getFirestore,
-} from "firebase/firestore";
-
+import { collection, getDocs, getFirestore } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { firebaseConfig } from "@/firebaseConfig";
 
-// States
 export default function myRequestsScreen() {
+  // States
   const [requests, setRequests] = useState([
-    { id: "", To: "", Date: "", Complete: false },
+    { id: "", to: "", from: "", date: "", complete: false },
   ]);
-  const [modalVisible, setModalVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState({
     id: "",
-    To: "",
-    Date: "",
-    Complete: false,
+    to: "",
+    from: "",
+    date: "",
+    complete: false,
   });
+  const [modalVisible, setModalVisible] = useState(false);
 
+  // Firebase stuff
   const app = initializeApp(firebaseConfig);
-
   const db = getFirestore(app);
 
-  // Fetch the data from the database
+  // Get requests
   useEffect(() => {
     const fetchData = async () => {
       const reqRef = collection(db, "Requests");
       const docSnap = await getDocs(reqRef);
-      // TODO: Figure out what this does. I copied it from stack overflow and it works.
-      const data = docSnap.docs.map((doc) => ({
-        id: doc.id,
-        To: doc.data().To,
-        Date: doc.data().Date,
-        Complete: doc.data().Complete,
-      }));
+      // This is some funky stackoverflow code but it maps the document snapshot to an array of JSON objects with the right types
+      const data = docSnap.docs.map(
+        (doc) => ({
+          id: doc.id,
+          to: doc.data().to,
+          from: doc.data().from,
+          date: doc.data().date,
+          complete: doc.data().complete,
+        }) as {
+          id: string;
+          to: string;
+          from: string;
+          date: string;
+          complete: boolean;
+        }
+      );
       setRequests(data);
-      console.log("data :>> ", data);
+      console.log('data :>> ', data);
     };
     fetchData();
   }, []);
 
-  // Render the icon for whether or not the request is complete
-  const renderIcon = (isComplete: boolean) => {
-    if (isComplete)
+  // Render the text for whether the request is complete
+  function renderIsComplete(complete: boolean) {
+    if (complete)
+      return <Text style={styles.listDate}>Successfully Cancelled</Text>;
+    else return <Text style={styles.listDate}>Pending</Text>;
+  }
+
+  // Render the appropriate icon
+  function renderIcon(complete: boolean) {
+    if (complete)
       return (
         <MaterialIcons
           name="free-cancellation"
@@ -76,28 +85,21 @@ export default function myRequestsScreen() {
           style={styles.icon}
         />
       );
-  };
+  }
 
-  // Render the text for whether or not the request is complete
-  const renderIsComplete = (isComplete: boolean) => {
-    if (isComplete)
-      return <Text style={styles.listDate}>Successfully Cancelled</Text>;
-    else return <Text style={styles.listDate}>Pending</Text>;
-  };
-
-  // Set the request to the current request and open the modal
-  const clickedRequest = (id: string) => {
-    // Get the data from the request id
-    const req = requests.find((request) => request.id === id) as {
+  // Handle clicking on a request
+  function clickedRequest(id: string) {
+    const req = requests.find((request) => request.id == id) as {
       id: string;
-      To: string;
-      Date: string;
-      Complete: boolean;
+      to: string;
+      from: string;
+      date: string;
+      complete: boolean;
     };
-    console.log('req :>> ', req);
     setSelectedRequest(req);
     setModalVisible(true);
-  };
+    console.log('id :>> ', id);
+  }
 
   return (
     <View style={styles.container}>
@@ -113,9 +115,9 @@ export default function myRequestsScreen() {
           <Text style={styles.title}>Edit this Cancellation Request</Text>
           <View style={styles.separator} />
           <Calendar
-            initialDate={selectedRequest.Date}
+            initialDate={selectedRequest.date}
             markedDates={{
-              [selectedRequest.Date]: {
+              [selectedRequest.date]: {
                 selected: true,
                 marked: true,
               },
@@ -136,11 +138,11 @@ export default function myRequestsScreen() {
           <TouchableHighlight onPress={() => clickedRequest(item.id)}>
             <View style={styles.listItem}>
               <View style={styles.listText}>
-                <Text style={styles.listName}>{item.To}</Text>
-                <Text style={styles.listDate}>{item.Date}</Text>
-                {renderIsComplete(item.Complete)}
+                <Text style={styles.listName}>{item.to}</Text>
+                <Text style={styles.listDate}>{item.date}</Text>
+                {renderIsComplete(item.complete)}
               </View>
-              {renderIcon(item.Complete)}
+              {renderIcon(item.complete)}
             </View>
           </TouchableHighlight>
         )}
