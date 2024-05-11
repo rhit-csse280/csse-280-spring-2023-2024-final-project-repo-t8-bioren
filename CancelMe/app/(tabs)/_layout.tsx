@@ -48,9 +48,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="addRequest"
         options={{
-          title: 'Tab Two',
+          title: 'New Request',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />

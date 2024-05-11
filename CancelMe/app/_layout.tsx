@@ -54,7 +54,8 @@ function RootLayoutNav() {
 
   return (
     <UserContext.Provider value={username}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      {/* Dark theme isn't working so I disabled it */}
+      <ThemeProvider value={colorScheme === 'dark' ? DefaultTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
