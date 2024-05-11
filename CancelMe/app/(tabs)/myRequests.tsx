@@ -15,10 +15,13 @@ import { firebaseConfig } from "@/firebaseConfig";
 import { UserContext } from '@/app/_layout'
 
 export default function myRequestsScreen() {
-  const username = useContext(UserContext);
+  const user = useContext(UserContext);
   // States
   const [requests, setRequests] = useState([
     { id: "", to: "", from: "", date: "" },
+  ]);
+  const [users, setUsers] = useState([
+    { phoneNumber: "", displayName: "" }
   ]);
   const [selectedRequest, setSelectedRequest] = useState({
     id: "",
@@ -33,8 +36,24 @@ export default function myRequestsScreen() {
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  const fetchData = async () => {
-    console.log('username :>> ', username);
+  async function fetchUsers() {
+    // Get users
+    const userRef = collection(db, "Users");
+    const userSnap = await (getDocs(userRef));
+
+    const userData = userSnap.docs.map(
+      (doc) => ({
+        phoneNumber: doc.data().phoneNumber,
+        displayName: doc.data().displayName
+      }) as {
+        phoneNumber: string;
+        displayName: string;
+      }
+    );
+    setUsers(userData);
+  }
+
+  async function fetchRequests() {
     const reqRef = collection(db, "Requests");
     const docSnap = await getDocs(reqRef);
     // This is some funky stackoverflow code but it maps the document snapshot to an array of JSON objects with the right types
@@ -56,11 +75,12 @@ export default function myRequestsScreen() {
 
   // Get requests
   useEffect(() => {
-    fetchData();
+    fetchUsers();
+    fetchRequests();
   }, []);
 
   // Render the text for whether the request is complete
-  function renderIsComplete(item: { id: string, to: string, from: string, date: string}) {
+  function renderIsComplete(item: { id: string, to: string, from: string, date: string }) {
     if (requests.find((req) => {
       return (req.to == item.from && req.from == item.to && req.date == item.date); // I'm not using cloud functions so this is how I need to find the cancelled ones.
     })) return <Text style={styles.listDate}>Successfully Cancelled</Text>;
@@ -68,17 +88,17 @@ export default function myRequestsScreen() {
   }
 
   // Render the appropriate icon
-  function renderIcon(item: { id: string, to: string, from: string, date: string}) {
+  function renderIcon(item: { id: string, to: string, from: string, date: string }) {
     if (requests.find((req) => {
       return (req.to == item.from && req.from == item.to && req.date == item.date); // I'm not using cloud functions so this is how I need to find the cancelled ones.
     })) return (
-        <MaterialIcons
-          name="free-cancellation"
-          size={24}
-          color="black"
-          style={styles.icon}
-        />
-      );
+      <MaterialIcons
+        name="free-cancellation"
+        size={24}
+        color="black"
+        style={styles.icon}
+      />
+    );
     else
       return (
         <MaterialIcons
@@ -116,7 +136,7 @@ export default function myRequestsScreen() {
       });
     }
     update();
-    fetchData();  // There's probably a better way to do this.
+    fetchRequests();  // There's probably a better way to do this.
     setModalVisible(!modalVisible);
     setSelectedRequest({
       id: "",
@@ -133,7 +153,7 @@ export default function myRequestsScreen() {
       await deleteDoc(doc(db, "Requests", selectedRequest.id));
     }
     del();
-    fetchData();  // There's probably a better way to do this.
+    fetchRequests();  // There's probably a better way to do this.
     setModalVisible(!modalVisible);
     setSelectedRequest({
       id: "",
@@ -142,6 +162,17 @@ export default function myRequestsScreen() {
       date: ""
     });
     setSelectedDate("");
+  }
+
+  function getName(phone: string): string {
+    console.log('users :>> ', users);
+    try {
+      return users.filter((item) => {
+        return item.phoneNumber == phone
+      })[0].displayName;
+    } catch {
+      return "Loading...";
+    }
   }
 
   return (
@@ -192,14 +223,14 @@ export default function myRequestsScreen() {
       <FlatList
         style={styles.list}
         data={requests.filter((doc) => {
-          return doc.from == username
+          return doc.from == user.phoneNumber
         })}
         extraData={requests}
         renderItem={({ item }) => (
           <TouchableHighlight onPress={() => clickedRequest(item.id)}>
             <View style={styles.listItem}>
               <View style={styles.listText}>
-                <Text style={styles.listName}>{item.to}</Text>
+                <Text style={styles.listName}>{getName(item.to)}</Text>
                 <Text style={styles.listDate}>{item.date}</Text>
                 {renderIsComplete(item)}
               </View>

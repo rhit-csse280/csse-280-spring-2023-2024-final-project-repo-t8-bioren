@@ -10,7 +10,7 @@ import { addDoc, collection, deleteDoc, doc, getDocs, getFirestore, setDoc, upda
 import { UserContext } from '@/app/_layout'
 
 export default function addRequest() {
-  const username = useContext(UserContext);
+  const user = useContext(UserContext);
   // States
   const [toUsername, updateToUsername] = useState("");
   const [selectedDate, updateSelectedDate] = useState("");
@@ -23,7 +23,7 @@ export default function addRequest() {
     const update = async () => {
       await addDoc(collection(db, "Requests"), {
         to: toUsername,
-        from: username,
+        from: user.phoneNumber,
         date: selectedDate
       });
     }
@@ -37,7 +37,7 @@ export default function addRequest() {
         style={styles.input}
         value={toUsername}
         onChangeText={updateToUsername}
-        placeholder='Who are you cancelling with?'
+        placeholder='their phone number'
         keyboardType='default'>
       </TextInput>
       <Calendar

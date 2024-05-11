@@ -19,7 +19,7 @@ export const unstable_settings = {
 };
 
 // User context
-export const UserContext = React.createContext("");
+export const UserContext = React.createContext({username: "", phoneNumber:""});
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -53,7 +53,7 @@ function RootLayoutNav() {
   const [username, setUsername] = useState("Matt Boutell");
 
   return (
-    <UserContext.Provider value={username}>
+    <UserContext.Provider value={{username: username, phoneNumber: "5555555555"}}>
       {/* Dark theme isn't working so I disabled it */}
       <ThemeProvider value={colorScheme === 'dark' ? DefaultTheme : DefaultTheme}>
         <Stack>
