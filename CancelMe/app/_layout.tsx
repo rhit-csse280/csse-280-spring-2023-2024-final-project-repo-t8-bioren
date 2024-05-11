@@ -15,11 +15,11 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: 'login',
 };
 
 // User context
-export const UserContext = React.createContext({username: "", phoneNumber:""});
+export const UserContext = React.createContext({phoneNumber: ""});
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -50,14 +50,14 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const [username, setUsername] = useState("Matt Boutell");
 
   return (
-    <UserContext.Provider value={{username: username, phoneNumber: "5555555555"}}>
+    <UserContext.Provider value={{phoneNumber: "5555555555"}}>
       {/* Dark theme isn't working so I disabled it */}
       <ThemeProvider value={colorScheme === 'dark' ? DefaultTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="login" />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         </Stack>
       </ThemeProvider>

@@ -7,7 +7,6 @@ import React, { useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { firebaseConfig } from '@/firebaseConfig';
 
-
 export default function TabOneScreen() {
   useEffect(() => {
     const app = initializeApp(firebaseConfig);
