@@ -5,42 +5,58 @@ import React, { useContext, useEffect, useState } from 'react';
 
 import { initializeApp } from 'firebase/app';
 import { firebaseConfig } from '@/firebaseConfig';
-import { getAuth, signInWithEmailAndPassword, signInWithPhoneNumber } from 'firebase/auth';
+import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, signInWithPhoneNumber } from 'firebase/auth';
 import { router } from 'expo-router'
 import { UserContext } from './_layout';
+import { addDoc, collection, getFirestore } from 'firebase/firestore';
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth();
+  const [displayName, setDisplayName] = useState("");
 
   const user = useContext(UserContext);
 
-  function signIn() {
-    signInWithEmailAndPassword(auth, phoneNumber + "@rose-hulman.edu", password)
-        .then((userCredential) => {
-          // Signed in 
-          const firebaseUser = userCredential.user;
-          user.phoneNumber = phoneNumber;
-          console.log('user.phoneNumber :>> ', user.phoneNumber);
-          router.replace('(tabs)');
-        })
-        .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth();
+  const db = getFirestore(app);
+
+  function register() {
+    createUserWithEmailAndPassword(auth, phoneNumber + "@rose-hulman.edu", password)
+    .then((userCredential) => {
+      const firebaseUser = userCredential.user;
+      const update = async () => {
+        await addDoc(collection(db, "Users"), {
+          phoneNumber: phoneNumber,
+          displayName: displayName
         });
+      }
+      update();
+      user.phoneNumber = phoneNumber;
+      router.replace('(tabs)');
+    })
+    .catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      // ..
+    });
     }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Register</Text>
       <TextInput
         style={styles.input}
         value={phoneNumber}
         onChangeText={setPhoneNumber}
         placeholder='Phone Number'
+        keyboardType='default'>
+      </TextInput>
+      <TextInput
+        style={styles.input}
+        value={displayName}
+        onChangeText={setDisplayName}
+        placeholder='Display Name'
         keyboardType='default'>
       </TextInput>
       <TextInput
@@ -51,15 +67,9 @@ export default function LoginScreen() {
         keyboardType='default'>
       </TextInput>
       <Button
-            title="Login"
-            onPress={() => {
-              signIn();
-            }}
-          />
-                <Button
             title="Register"
             onPress={() => {
-              router.replace('register');
+              register();
             }}
           />
     </View>
