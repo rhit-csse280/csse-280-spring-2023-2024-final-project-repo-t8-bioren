@@ -7,14 +7,16 @@ import {
 } from "react-native";
 import { Text, View } from "@/components/Themed";
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { Calendar, CalendarList, Agenda } from "react-native-calendars";
 import { collection, deleteDoc, doc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
 import { initializeApp } from "firebase/app";
 import { firebaseConfig } from "@/firebaseConfig";
-import { UserContext } from '@/app/_layout'
+import { UserContext } from '@/app/_layout';
+import { useFocusEffect } from "expo-router";
 
 export default function myRequestsScreen() {
+  let changed = false;
   const user = useContext(UserContext);
   // States
   const [requests, setRequests] = useState([
@@ -33,8 +35,8 @@ export default function myRequestsScreen() {
   const [selectedDate, setSelectedDate] = useState("");
 
   // Firebase stuff
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  let app = initializeApp(firebaseConfig);
+  let db = getFirestore(app);
 
   async function fetchUsers() {
     // Get users
@@ -54,6 +56,8 @@ export default function myRequestsScreen() {
   }
 
   async function fetchRequests() {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
     const reqRef = collection(db, "Requests");
     const docSnap = await getDocs(reqRef);
     // This is some funky stackoverflow code but it maps the document snapshot to an array of JSON objects with the right types
@@ -70,7 +74,9 @@ export default function myRequestsScreen() {
         date: string;
       }
     );
+    console.log('data :>> ', data);
     setRequests(data);
+    console.log('requests :>> ', requests);
   };
 
   // Get requests
@@ -78,6 +84,15 @@ export default function myRequestsScreen() {
     fetchUsers();
     fetchRequests();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log("Fetching data...");
+      fetchUsers();
+      fetchRequests();
+      // console.log('requests :>> ', requests);
+    }, [])
+  );
 
   // Render the text for whether the request is complete
   function renderIsComplete(item: { id: string, to: string, from: string, date: string }) {
@@ -122,7 +137,7 @@ export default function myRequestsScreen() {
     setSelectedRequest(req);
     setSelectedDate(req.date);
     setModalVisible(true);
-    console.log('id :>> ', id);
+    // console.log('id :>> ', id);
   }
 
   // Save the request
@@ -165,7 +180,7 @@ export default function myRequestsScreen() {
   }
 
   function getName(phone: string): string {
-    console.log('users :>> ', users);
+    // console.log('users :>> ', users);
     try {
       return users.filter((item) => {
         return item.phoneNumber == phone
@@ -189,6 +204,7 @@ export default function myRequestsScreen() {
           <Text style={styles.title}>Edit this Cancellation Request</Text>
           <View style={styles.separator} />
           <Calendar
+            style = {styles.calendar}
             initialDate={selectedRequest.date}
             markedDates={{
               [selectedDate]: {
@@ -220,12 +236,14 @@ export default function myRequestsScreen() {
           />
         </View>
       </Modal>
+      <Text style={styles.title}>My Requests</Text>
+      <View style={styles.separator}></View>
       <FlatList
         style={styles.list}
         data={requests.filter((doc) => {
           return doc.from == user.phoneNumber
         })}
-        extraData={requests}
+        extraData={requests && changed}
         renderItem={({ item }) => (
           <TouchableHighlight onPress={() => clickedRequest(item.id)}>
             <View style={styles.listItem}>
@@ -271,13 +289,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
   separator: {
     marginVertical: 30,
     height: 1,
     width: "80%",
   },
+  title: {
+    marginTop: 10,
+    verticalAlign: "top",
+    textAlignVertical: "top",
+    textAlign: "center",
+    fontSize: 32,
+    fontWeight: 'bold'
+  },
+  calendar: {
+    width: 200
+  }
 });

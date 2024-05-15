@@ -27,6 +27,21 @@ export default function TabLayout() {
         headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
+        name="myRequests"
+        options={{
+          title: 'My Requests',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="addRequest"
+        options={{
+          title: 'New Request',
+          tabBarIcon: ({ color }) => <TabBarIcon name="plus-circle" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="index"
         options={{
           title: 'Tab One',
@@ -45,20 +60,6 @@ export default function TabLayout() {
               </Pressable>
             </Link>
           ),
-        }}
-      />
-      <Tabs.Screen
-        name="addRequest"
-        options={{
-          title: 'New Request',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="myRequests"
-        options={{
-          title: 'My Requests',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
     </Tabs>
