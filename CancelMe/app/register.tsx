@@ -33,7 +33,7 @@ export default function RegisterScreen() {
       }
       update();
       user.phoneNumber = phoneNumber;
-      router.replace('(tabs)');
+      router.replace('/');
     })
     .catch((error) => {
       const errorCode = error.code;

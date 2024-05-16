@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingTop: '10%'
+    padding: '10%'
   },
   containerModal: {
     flex: 1,
