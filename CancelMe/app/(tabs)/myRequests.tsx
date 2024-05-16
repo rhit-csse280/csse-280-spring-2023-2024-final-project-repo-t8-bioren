@@ -2,11 +2,12 @@ import {
   Button,
   FlatList,
   Modal,
+  Pressable,
   StyleSheet,
   TouchableHighlight,
 } from "react-native";
 import { Text, View } from "@/components/Themed";
-import { MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import React, { useEffect, useState, useContext, useCallback } from "react";
 import { Calendar, CalendarList, Agenda } from "react-native-calendars";
 import { collection, deleteDoc, doc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
@@ -74,8 +75,8 @@ export default function myRequestsScreen() {
         date: string;
       }
     );
-    console.log('data :>> ', data);
     setRequests(data);
+    changed = !changed;
     console.log('requests :>> ', requests);
   };
 
@@ -186,7 +187,7 @@ export default function myRequestsScreen() {
         return item.phoneNumber == phone
       })[0].displayName;
     } catch {
-      return "Loading...";
+      return "";
     }
   }
 
@@ -194,46 +195,62 @@ export default function myRequestsScreen() {
     <View style={styles.container}>
       <Modal
         animationType="slide"
-        transparent={true}
         visible={modalVisible}
+        presentationStyle="pageSheet"
         onRequestClose={() => {
           setModalVisible(!modalVisible);
         }}
       >
-        <View style={styles.container}>
-          <Text style={styles.title}>Edit this Cancellation Request</Text>
+        <View style={styles.containerModal}>
+          <View style={styles.titleContainer}>
+            <Text style={styles.title} adjustsFontSizeToFit={true}
+              numberOfLines={1}>Event with {getName(selectedRequest.to)}</Text>
+          </View>
+          <View style={styles.separator} />
+          <View style={styles.separator} />
           <View style={styles.separator} />
           <Calendar
-            style = {styles.calendar}
+            style={styles.calendar}
+            theme={{
+              arrowColor: '#007AFF',
+              todayTextColor: '#007AFF',
+            }}
             initialDate={selectedRequest.date}
             markedDates={{
               [selectedDate]: {
                 selected: true,
-                marked: true,
+                selectedColor: '#007AFF'
               },
             }}
             onDayPress={(day) => {
               setSelectedDate(day.dateString);
             }}
           ></Calendar>
-          <Button
-            title="Close"
-            onPress={() => {
-              setModalVisible(!modalVisible);
-            }}
-          />
-          <Button
-            title="Save"
-            onPress={() => {
-              saveRequest();
-            }}
-          />
-          <Button
-            title="Delete"
-            onPress={() => {
-              deleteRequest();
-            }}
-          />
+          <View style={styles.buttonContainer}>
+            <Pressable
+              style={styles.button}
+              onPress={() => {
+                setModalVisible(!modalVisible)
+              }}>
+              <Text style={styles.buttonText}>Close</Text>
+            </Pressable>
+            <Pressable
+              style={styles.button}
+              onPress={() => {
+                saveRequest();
+                setModalVisible(!modalVisible)
+              }}>
+              <Text style={styles.buttonText}>Save</Text>
+            </Pressable>
+            <Pressable
+              style={styles.red}
+              onPress={() => {
+                deleteRequest();
+                setModalVisible(!modalVisible)
+              }}>
+              <Text style={styles.buttonText}>Delete</Text>
+            </Pressable>
+          </View>
         </View>
       </Modal>
       <Text style={styles.title}>My Requests</Text>
@@ -245,7 +262,7 @@ export default function myRequestsScreen() {
         })}
         extraData={requests && changed}
         renderItem={({ item }) => (
-          <TouchableHighlight onPress={() => clickedRequest(item.id)}>
+          <Pressable onPress={() => clickedRequest(item.id)}>
             <View style={styles.listItem}>
               <View style={styles.listText}>
                 <Text style={styles.listName}>{getName(item.to)}</Text>
@@ -254,7 +271,7 @@ export default function myRequestsScreen() {
               </View>
               {renderIcon(item)}
             </View>
-          </TouchableHighlight>
+          </Pressable>
         )}
       />
     </View>
@@ -286,8 +303,13 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    paddingTop: '10%'
+  },
+  containerModal: {
+    flex: 1,
+    paddingLeft: '10%',
+    paddingRight: '10%',
+    alignContent: 'center'
   },
   separator: {
     marginVertical: 30,
@@ -295,14 +317,53 @@ const styles = StyleSheet.create({
     width: "80%",
   },
   title: {
-    marginTop: 10,
+    marginTop: 100,
     verticalAlign: "top",
     textAlignVertical: "top",
     textAlign: "center",
     fontSize: 32,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    width: "100%",
   },
   calendar: {
-    width: 200
+    width: '100%'
+  },
+  button: {
+    margin: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 4,
+    elevation: 3,
+    backgroundColor: '#007AFF',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16
+  },
+  red: {
+    margin: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 4,
+    elevation: 3,
+    backgroundColor: 'red',
+  },
+  buttonContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    display: "flex",
+    flexDirection: "row"
+  },
+  modal: {
+    color: '#EEEEEE'
+  },
+  titleContainer: {
+    display: "flex",
+    flexDirection: "row"
   }
 });
