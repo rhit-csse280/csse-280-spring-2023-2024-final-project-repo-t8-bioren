@@ -1,4 +1,4 @@
-import { Button, Keyboard, Pressable, StyleSheet, TextInput, Touchable, TouchableWithoutFeedback } from 'react-native';
+import { Alert, Button, Keyboard, Pressable, StyleSheet, TextInput, Touchable, TouchableWithoutFeedback } from 'react-native';
 
 import { Text, View } from '@/components/Themed';
 import React, { useContext, useEffect, useState } from 'react';
@@ -30,6 +30,7 @@ export default function LoginScreen() {
       .catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
+        Alert.alert("Login Failed!", `${errorCode}\n${errorMessage}`);
       });
   }
 
